@@ -1,3 +1,8 @@
+/*
+patchwork provides on-the-fly way to replace files on ISO9660 image. RockRidge extention is also supperted partially.
+
+README: https://github.com/kaz/patchwork#readme
+*/
 package patchwork
 
 import (

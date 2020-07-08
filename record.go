@@ -5,7 +5,7 @@ import (
 )
 
 type (
-	DirectoryRecord struct {
+	directoryRecord struct {
 		raw []byte
 
 		ExtentLocation uint32
@@ -25,8 +25,8 @@ func marshalUint32(i uint32) []byte {
 	return append(le, be...)
 }
 
-func unmarshalDirectoryRecord(raw []byte) *DirectoryRecord {
-	r := &DirectoryRecord{raw: raw}
+func unmarshalDirectoryRecord(raw []byte) *directoryRecord {
+	r := &directoryRecord{raw: raw}
 
 	// Extent location is encoded as little-endian in [2:6]
 	r.ExtentLocation = binary.LittleEndian.Uint32(raw[2:6])
@@ -60,7 +60,7 @@ func unmarshalDirectoryRecord(raw []byte) *DirectoryRecord {
 
 	return r
 }
-func (r *DirectoryRecord) marshal() []byte {
+func (r *directoryRecord) marshal() []byte {
 	raw := r.raw[:2]
 
 	raw = append(raw, marshalUint32(r.ExtentLocation)...)
@@ -92,6 +92,6 @@ func (r *DirectoryRecord) marshal() []byte {
 	return raw
 }
 
-func (r *DirectoryRecord) clone() *DirectoryRecord {
+func (r *directoryRecord) clone() *directoryRecord {
 	return unmarshalDirectoryRecord(r.marshal())
 }

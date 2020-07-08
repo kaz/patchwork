@@ -32,7 +32,7 @@ func NewImage(dev Device) *Image {
 	return &Image{dev}
 }
 
-func (img *Image) setExtent(r *DirectoryRecord, buf []byte) error {
+func (img *Image) setExtent(r *directoryRecord, buf []byte) error {
 	if n, err := img.dev.WriteAt(buf, int64(r.ExtentLocation*SECTOR_SIZE)); err != nil {
 		return fmt.Errorf("failed to write data to image: %w", err)
 	} else if n != len(buf) {
@@ -40,7 +40,7 @@ func (img *Image) setExtent(r *DirectoryRecord, buf []byte) error {
 	}
 	return nil
 }
-func (img *Image) getExtent(r *DirectoryRecord) ([]byte, error) {
+func (img *Image) getExtent(r *directoryRecord) ([]byte, error) {
 	buf := make([]byte, r.ExtentSize)
 	if n, err := img.dev.ReadAt(buf, int64(r.ExtentLocation*SECTOR_SIZE)); err != nil {
 		return nil, fmt.Errorf("failed to read data from image: %w", err)
@@ -50,7 +50,7 @@ func (img *Image) getExtent(r *DirectoryRecord) ([]byte, error) {
 	return buf, nil
 }
 
-func (img *Image) setChildren(parent *DirectoryRecord, children []*DirectoryRecord) error {
+func (img *Image) setChildren(parent *directoryRecord, children []*directoryRecord) error {
 	sort.Slice(children, func(i, j int) bool {
 		return strings.Compare(children[i].Identifier, children[j].Identifier) == -1
 	})
@@ -72,13 +72,13 @@ func (img *Image) setChildren(parent *DirectoryRecord, children []*DirectoryReco
 	}
 	return nil
 }
-func (img *Image) getChildren(r *DirectoryRecord) ([]*DirectoryRecord, error) {
+func (img *Image) getChildren(r *directoryRecord) ([]*directoryRecord, error) {
 	buf, err := img.getExtent(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get extent: %w", err)
 	}
 
-	children := []*DirectoryRecord{}
+	children := []*directoryRecord{}
 	for i := uint32(0); buf[i] > 0; i += uint32(buf[i]) {
 		// Each record has its size at first byte.
 		children = append(children, unmarshalDirectoryRecord(buf[i:i+uint32(buf[i])]))
@@ -110,7 +110,7 @@ func (img *Image) getVolumeDescriptor() ([]byte, error) {
 	return nil, fmt.Errorf("volume descriptor was not found")
 }
 
-func (img *Image) getRootDirectoryRecord() (*DirectoryRecord, error) {
+func (img *Image) getRootDirectoryRecord() (*directoryRecord, error) {
 	vd, err := img.getVolumeDescriptor()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read volume descriptor: %w", err)
@@ -120,7 +120,7 @@ func (img *Image) getRootDirectoryRecord() (*DirectoryRecord, error) {
 	return unmarshalDirectoryRecord(vd[156:190]), nil
 }
 
-func (img *Image) findRecordFromChildren(pwd *DirectoryRecord, key string) (*DirectoryRecord, []*DirectoryRecord, error) {
+func (img *Image) findRecordFromChildren(pwd *directoryRecord, key string) (*directoryRecord, []*directoryRecord, error) {
 	children, err := img.getChildren(pwd)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to find children: %w", err)
@@ -134,7 +134,7 @@ func (img *Image) findRecordFromChildren(pwd *DirectoryRecord, key string) (*Dir
 
 	return nil, children, fmt.Errorf("no such entry: %v", key)
 }
-func (img *Image) findDirectoryRecord(path string) (*DirectoryRecord, error) {
+func (img *Image) findDirectoryRecord(path string) (*directoryRecord, error) {
 	dirs := strings.Split(path, "/")
 	if len(dirs) < 1 || dirs[0] != "" {
 		return nil, fmt.Errorf("unexpected path: %v", path)

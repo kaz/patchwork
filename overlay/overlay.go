@@ -11,14 +11,14 @@ type (
 		base   Base
 		cursor int64
 		end    int64
-		layers []*Layer
+		layers []*layer
 	}
 	Base interface {
 		io.Closer
 		io.Seeker
 		io.ReaderAt
 	}
-	Layer struct {
+	layer struct {
 		data   []byte
 		offset int64
 	}
@@ -29,7 +29,7 @@ func New(base Base) (*Overlay, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to seek base: %w", err)
 	}
-	return &Overlay{base, 0, end, []*Layer{}}, nil
+	return &Overlay{base, 0, end, []*layer{}}, nil
 }
 
 func (o *Overlay) Close() error {
@@ -64,7 +64,7 @@ func (o *Overlay) WriteAt(p []byte, off int64) (int, error) {
 	if off == o.end {
 		o.end += int64(len(p))
 	}
-	o.layers = append(o.layers, &Layer{p, off})
+	o.layers = append(o.layers, &layer{p, off})
 	return len(p), nil
 }
 

@@ -7,16 +7,15 @@ import (
 )
 
 type (
+	Base interface {
+		io.Seeker
+		io.ReaderAt
+	}
 	Overlay struct {
 		base   Base
 		cursor int64
 		end    int64
 		layers []*layer
-	}
-	Base interface {
-		io.Closer
-		io.Seeker
-		io.ReaderAt
 	}
 	layer struct {
 		data   []byte
@@ -33,7 +32,10 @@ func New(base Base) (*Overlay, error) {
 }
 
 func (o *Overlay) Close() error {
-	return o.base.Close()
+	if closer, ok := interface{}(o).(io.Closer); ok {
+		return closer.Close()
+	}
+	return nil
 }
 
 func (o *Overlay) Size() int64 {

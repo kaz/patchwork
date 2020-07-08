@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 )
 
 type (
@@ -38,6 +39,15 @@ func New(base Base) (*Overlay, error) {
 		return nil, fmt.Errorf("failed to seek base: %w", err)
 	}
 	return &Overlay{base, 0, end, []*layer{}}, nil
+}
+
+// Create new instance which has os.File as base layer.
+func NewFromFile(file string) (*Overlay, error) {
+	fh, err := os.Open(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file: %w", err)
+	}
+	return New(fh)
 }
 
 func (o *Overlay) Close() error {

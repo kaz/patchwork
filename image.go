@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"strings"
+
+	"github.com/kaz/patchwork/overlay"
 )
 
 const (
@@ -30,6 +33,25 @@ type (
 // Create instance which has specified device in it.
 func NewImage(dev Device) *Image {
 	return &Image{dev}
+}
+
+// Create instance from image file. Changes will be applied directly.
+// If you prefer to avoid change original file, use NewOverlayedImageFromFile instead.
+func NewImageFromFile(file string) (*Image, *os.File, error) {
+	fh, err := os.OpenFile(file, os.O_RDWR, 0644)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to open file: %w", err)
+	}
+	return NewImage(fh), fh, nil
+}
+
+// Create instance from image file with overlay reader as a device. Changes won't be applied to original file.
+func NewOverlayedImageFromFile(file string) (*Image, *overlay.Overlay, error) {
+	ol, err := overlay.NewFromFile(file)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to initialize overlay: %w", err)
+	}
+	return &Image{ol}, ol, nil
 }
 
 func (img *Image) setExtent(r *directoryRecord, buf []byte) error {

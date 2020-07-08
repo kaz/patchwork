@@ -13,16 +13,21 @@ const (
 )
 
 type (
+	// Device is data layer which Image write updated contents to and read original contents from.
+	// You can use os.File as Device.
 	Device interface {
 		io.Seeker
 		io.ReaderAt
 		io.WriterAt
 	}
+
+	// Image represents rewritable ISO9660 disk image.
 	Image struct {
 		dev Device
 	}
 )
 
+// Create instance which has specified device in it.
 func NewImage(dev Device) *Image {
 	return &Image{dev}
 }
@@ -149,6 +154,15 @@ func (img *Image) findDirectoryRecord(path string) (*DirectoryRecord, error) {
 	return pwd, nil
 }
 
+// UpdateFile updates file in image.
+//
+// path is a file which will be replaced. It must be a path on RockRidge extention and a valid and existent filename on image's filesystem. (e.g. /EFI/BOOT/grub.cfg)
+//
+// id is new filename, which is used when the image read as raw-ISO9660 filesystem.
+//
+// name is also new filename, which is used when the image read as ISO9660 with RockRidge extention.
+//
+// data is a content which will be written.
 func (img *Image) UpdateFile(path, id, name string, data []byte) error {
 	dirs := strings.Split(path, "/")
 

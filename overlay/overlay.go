@@ -7,22 +7,31 @@ import (
 )
 
 type (
+	// Base is underlying original reader of overlayed reader. os.File can be Base.
 	Base interface {
 		io.Seeker
 		io.ReaderAt
 	}
+
+	// Overlay is layered reader, which any section of its underlying reader can be modified non-destructively.
+	// This behaves just like OverlayFS.
+	//
+	// Write operation to Overlay is treated as "pushing new layer". It will not break underlying base reader.
+	// Reading from Overlay reflects write operations, without changing base reader.
 	Overlay struct {
 		base   Base
 		cursor int64
 		end    int64
 		layers []*layer
 	}
+
 	layer struct {
 		data   []byte
 		offset int64
 	}
 )
 
+// Create new instance with specified base layer.
 func New(base Base) (*Overlay, error) {
 	end, err := base.Seek(0, io.SeekEnd)
 	if err != nil {
